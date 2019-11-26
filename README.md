@@ -16,4 +16,4 @@ Run RDM.py to generate RDM for 3 distance measures : 1-corr, euclidean and mahal
      style="float: center; margin-top: 10px; margin-down: 10px;" />
 
 # References:
-** http://twinsetfusion.csail.mit.edu/ **
+**http://twinsetfusion.csail.mit.edu/**
