@@ -10,3 +10,8 @@ Run RDM.py to generate RDM for 3 distance measures : 1-corr, euclidean and mahal
 <img src="https://raw.githubusercontent.com/nikiibayat/MEG/master/mahalanobis_RDM.png"
      alt="Mahalanobis Distance"
      style="float: center; margin-top: 10px; margin-down: 10px;" />
+
+<img src="https://github.com/nikiibayat/MEG/blob/master/measures_corr.png?raw=true"
+     alt="Comparison of different distance measures based on correlation"
+     style="float: center; margin-top: 10px; margin-down: 10px;" />
+
