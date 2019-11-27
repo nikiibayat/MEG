@@ -11,7 +11,8 @@ Run RDM.py to generate RDM for 3 distance measures : 1-corr, euclidean and mahal
      alt="Mahalanobis Distance"
      style="float: center; margin-top: 10px; margin-down: 10px;" />
 
-<img src="https://github.com/nikiibayat/MEG/blob/master/correlation_new.png?raw=true"
+Correlation between twinset1 and twinset2 for different distance measures. Mahalanobis outperforms!
+<img src="https://github.com/nikiibayat/MEG/blob/master/c.png?raw=true"
      alt="Comparison of different distance measures based on correlation"
      style="float: center; margin-top: 10px; margin-down: 10px;" />
 
