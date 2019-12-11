@@ -1,6 +1,7 @@
 from HypothesisTtest import *
 from scipy.stats import spearmanr
 from scipy.spatial.distance import squareform
+import matplotlib.pyplot as plt
 
 def plot_comparison(c1, c2, c3, t1, t2, t3, title):
     time = np.arange(-200, 1001)
@@ -53,7 +54,7 @@ if __name__ == '__main__':
             RDM_corr_MEG = np.load(
                 './Subjects/' + subject + '/RDM_Correlation_Final.npy')
             RDM_euclidean_MEG = np.load(
-                './Subjects/' + subject + '/RDM_Euclidean_Final.npy')
+                './Subjects/' + subject + '/Magnet_MEG_Euc_avg_oversubjects.npy')
             RDM_mahalanobis_MEG = np.load(
                 './Subjects/' + subject + '/RDM_Mahalanobis_Final.npy')
 

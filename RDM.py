@@ -1,6 +1,5 @@
 import hdf5storage
 import numpy as np
-from numba import prange, njit
 
 
 def cov1para(x, shrink):
@@ -117,7 +116,7 @@ if __name__ == '__main__':
             RDM_corr = np.zeros([1201, 156, 156], dtype=np.float64)
             RDM_euclidean = np.zeros([1201, 156, 156], dtype=np.float64)
             RDM_mahalanobis = np.zeros([1201, 156, 156], dtype=np.float64)
-            for t in prange(1201):
+            for t in range(1201):
                 # if t % 100 == 0:
                 #     print("Time point: ", t)
                 for i in range(images.shape[0]):
