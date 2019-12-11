@@ -145,19 +145,7 @@ def fdr_thresh(PH1, PH2, PH3):
     return thr1, thr2, thr3
 
 
-def test_pvalcorrection_reject(PH):
-    # consistency test for reject boolean and pvalscorr
-    for alpha in [0.01, 0.05, 0.1]:
-        for method in ['b', 's', 'sh', 'hs', 'h', 'hommel', 'fdr_i', 'fdr_n',
-                       'fdr_tsbky', 'fdr_tsbh', 'fdr_gbs']:
-            reject, pvalscorr = multipletests(PH, alpha=alpha,
-                                              method=method)[:2]
-            #print 'reject.sum', v[1], reject.sum()
-            msg = 'case %s %3.2f rejected:%d\npval_raw=%r\npvalscorr=%r' % (
-                             method, alpha, reject.sum(), PH, pvalscorr)
-            assert_equal(reject, pvalscorr <= alpha, err_msg=msg)
-
-def hypothesis_ttest(c1, c2, c3, title):
+def hypothesis_ttest(c1, c2, c3):
     c1 = np.asarray(c1).reshape((-1, 1201))
     c2 = np.asarray(c2).reshape((-1, 1201))
     c3 = np.asarray(c3).reshape((-1, 1201))
@@ -172,23 +160,20 @@ def hypothesis_ttest(c1, c2, c3, title):
         t3, p3 = stats.ttest_1samp(c1[:, t] - c2[:, t], 0)
         PH3.append(p3)
 
-    rej1, PH1_corrected = multipletests(PH1, alpha=0.05, method='b')[:2]
-    rej2, PH2_corrected= multipletests(PH2, alpha=0.05, method='b')[:2]
-    rej3, PH3_corrected = multipletests(PH3, alpha=0.05, method='b')[:2]
+    rej1, PH1_corrected = multipletests(PH1, alpha=0.05, method='fdr_bh')[:2]
+    rej2, PH2_corrected = multipletests(PH2, alpha=0.05, method='fdr_bh')[:2]
+    rej3, PH3_corrected = multipletests(PH3, alpha=0.05, method='fdr_bh')[:2]
 
     PH1_count = []
     PH2_count = []
     PH3_count = []
     for i in range(len(PH1_corrected)):
-        if (PH1_corrected[i] <= 0.05) and rej1[i]:
-            print("PH1 Significant")
+        if rej1[i]:
             PH1_count.append(i-200)
-        if (PH2_corrected[i] <= 0.05) and rej2[i]:
+        if rej2[i]:
             PH2.append(i-200)
-            print("PH2 Significant")
-        if (PH3_corrected[i] <= 0.05) and rej3[i]:
+        if rej3[i]:
             PH3_count.append(i-200)
-            print("PH3 Significant")
 
     return PH1_count, PH2_count, PH3_count
 
