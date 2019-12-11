@@ -9,11 +9,11 @@ def plot_comparison(c1, c2, c3, t1, t2, t3, title):
     plt.plot(time, c2, color='#fc8d62', label="Mahalanobis - Euclidean")
     plt.plot(time, c3, color='#8da0cb', linestyle='dashed',
              label="1-Correlation - Euclidean")
-    horiz_line_data = np.array([-0.05 for i in range(len(t1))])
+    horiz_line_data = np.array([-0.09 for i in range(len(t1))])
     plt.scatter(t1, horiz_line_data, color='#66c2a5', s=5)
-    horiz_line_data = np.array([-0.07 for i in range(len(t2))])
+    horiz_line_data = np.array([-0.1 for i in range(len(t2))])
     plt.scatter(t2, horiz_line_data, color='#fc8d62', s=5)
-    horiz_line_data = np.array([-0.09 for i in range(len(t3))])
+    horiz_line_data = np.array([-0.07 for i in range(len(t3))])
     plt.scatter(t3, horiz_line_data, color='#8da0cb', s=5)
 
     plt.legend(loc="upper right", prop={'size': 6})
@@ -173,11 +173,10 @@ if __name__ == '__main__':
 
     ITtrange1, ITtrange2, ITtrange3 = hypothesis_ttest(total_corr_loc0,
                                                        total_euc_loc0,
-                                                       total_mah_loc0,
-                                                       "Fusion IT")
+                                                       total_mah_loc0)
     Calcarinetrange1, Calcarinetrange2, Calcarinetrange3 = hypothesis_ttest(
         total_corr_loc1, total_euc_loc1,
-        total_mah_loc1, "Fusion Calcarine")
+        total_mah_loc1)
 
     plot_comparison(np.subtract(avg_mah_loc0, avg_corr_loc0),
                     np.subtract(avg_mah_loc0, avg_euc_loc0),
