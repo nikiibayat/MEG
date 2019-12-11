@@ -1,0 +1,6 @@
+# ignore all logs
+*.log
+# ignore below directories
+/fMRI_RDMs/*
+/Raw_MEG/*
+/Subjects/*
