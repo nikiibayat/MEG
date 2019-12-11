@@ -4,3 +4,5 @@
 /fMRI_RDMs/*
 /Raw_MEG/*
 /Subjects/*
+/venv/*
+.idea/MEG.iml
