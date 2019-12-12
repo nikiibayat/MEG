@@ -4,7 +4,6 @@ from matplotlib.pyplot import imshow, show, colorbar, title, savefig
 from scipy.spatial.distance import squareform
 import matplotlib.pyplot as plt
 from scipy import stats
-from nose.tools import assert_equal
 from statsmodels.stats.multitest import multipletests
 
 
