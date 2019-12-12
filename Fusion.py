@@ -3,6 +3,7 @@ from scipy.stats import spearmanr
 from scipy.spatial.distance import squareform
 import matplotlib.pyplot as plt
 
+
 def plot_comparison(c1, c2, c3, t1, t2, t3, title):
     time = np.arange(-200, 1001)
     # plt.title(title)
@@ -18,8 +19,9 @@ def plot_comparison(c1, c2, c3, t1, t2, t3, title):
     plt.scatter(t3, horiz_line_data, color='#8da0cb', s=5)
 
     plt.legend(loc="upper right", prop={'size': 6})
-    plt.savefig('./Hypothesis_ttest/'+title)
+    plt.savefig('./Hypothesis_ttest/' + title)
     plt.close()
+
 
 if __name__ == '__main__':
     total_corr_loc0 = []
@@ -54,7 +56,8 @@ if __name__ == '__main__':
             RDM_corr_MEG = np.load(
                 './Subjects/' + subject + '/RDM_Correlation_Final.npy')
             RDM_euclidean_MEG = np.load(
-                './Subjects/' + subject + '/Magnet_MEG_Euc_avg_oversubjects.npy')
+                './Subjects/' + subject +
+                '/Magnet_Normalized_RDM_Euclidean_Final.npy')
             RDM_mahalanobis_MEG = np.load(
                 './Subjects/' + subject + '/RDM_Mahalanobis_Final.npy')
 
