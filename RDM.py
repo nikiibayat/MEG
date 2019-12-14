@@ -173,32 +173,33 @@ def create_SVM_RDMs():
                 bins2_train = []
                 for i in range(5):
                     bins1_train.append(bins1[i][0][:, time])
+                    y_train.append(0)
                     bins2_train.append(bins2[i][0][:, time])
-                    y_train.append(0 if img1 == img2 else 1)
+                    y_train.append(1)
                 x_train = np.concatenate((bins1_train, bins2_train))
-                print("x_train shape: ", np.asarray(x_train).shape)
+                #print("x_train shape: ", x_train.shape)
+                #print("y_train shape: ", len(y_train))
 
-                x_test = np.concatenate((bins1[5][0][:, time], bins2[5][0][:, time]))
-                print("x_test shape: ", np.asarray(x_test).shape)
-                y_test.append(0 if img1 == img2 else 1)
+                x_test = np.concatenate(([bins1[5][0][:, time]], [bins2[5][0][:, time]]))
+                y_test.append(0)
+                y_test.append(1)
+                #print("x_test shape: ", x_test.shape)
+                #print("y_test shape: ", len(y_test))
                 clf = svm.SVC()
-                model = clf.fit(np.asarray(x_train), np.asarray(y_train))
-                val_acc.append(
-                    model.score(np.asarray(x_test), np.asarray(y_test)))
+                model = clf.fit(x_train, y_train)
+                val_acc.append(model.score(x_test, y_test))
+
             return np.mean(val_acc)
 
-        dist = svm_dist(0, 0, 1)
-        print("distance between images 0 and 1 time 0 is: ", dist)
-
-        # RDM_svm = np.zeros([1201, 156, 156], dtype=np.float64)
-        # for t in range(1201):
-        #     if t % 100 == 0:
-        #         print("Time point: ", t)
-        #     for i in range(images.shape[0]):
-        #         for j in range(i + 1, images.shape[0]):
-        #             RDM_svm[t, i, j] = svm_dist(t, i, j)
-        #             RDM_svm[t, j, i] = RDM_svm[t, i, j]
-        # np.save('./Subjects/Subject' + str(subj) + '/RDM_SVM_Final', RDM_svm)
+        RDM_svm = np.zeros([1201, 156, 156], dtype=np.float64)
+        for t in range(1201):
+            if t % 100 == 0:
+                print("Time point: ", t)
+            for i in range(images.shape[0]):
+                for j in range(i + 1, images.shape[0]):
+                    RDM_svm[t, i, j] = svm_dist(t, i, j)
+                    RDM_svm[t, j, i] = RDM_svm[t, i, j]
+        np.save('./Subjects/Subject' + str(subj) + '/RDM_SVM_Final', RDM_svm)
 
 
 if __name__ == '__main__':
