@@ -1,5 +1,9 @@
 import hdf5storage
 import numpy as np
+from sklearn import svm
+
+import multiprocessing as mp
+from multiprocessing import Process
 
 
 def cov1para(x, shrink):
@@ -100,41 +104,123 @@ def normalize_magnet(images, subject):
     return images
 
 
-if __name__ == '__main__':
-    for subj in range(8, 9):
+def create_MEG_RDMs():
+    for subj in range(1, 16):
         print("Subject " + str(subj))
         data = hdf5storage.loadmat('./Raw_MEG/Subject_' + str(subj) + '.mat')
         images = data['Data'][0]
-        # data_cov = compute_cov(images)
+        data_cov = compute_cov(images)
         images = normalize_magnet(images, subj)
 
         for trial in range(len(images)):
             images[trial] = np.mean(images[trial])
-
 
         def finalRDM(images):
             RDM_corr = np.zeros([1201, 156, 156], dtype=np.float64)
             RDM_euclidean = np.zeros([1201, 156, 156], dtype=np.float64)
             RDM_mahalanobis = np.zeros([1201, 156, 156], dtype=np.float64)
             for t in range(1201):
-                # if t % 100 == 0:
-                #     print("Time point: ", t)
+                if t % 100 == 0:
+                    print("Time point: ", t)
                 for i in range(images.shape[0]):
                     for j in range(i + 1, images.shape[0]):
-                        # RDM_corr[t, i, j] = correlation(images[i][:, t],
-                        # images[j][:, t])
-                        # RDM_corr[t, j, i] = RDM_corr[t, i, j]
+                        RDM_corr[t, i, j] = correlation(images[i][:, t],
+                                                        images[j][:, t])
+                        RDM_corr[t, j, i] = RDM_corr[t, i, j]
                         RDM_euclidean[t, i, j] = euclidean(images[i][:, t],
                                                            images[j][:, t])
                         RDM_euclidean[t, j, i] = RDM_euclidean[t, i, j]
-                        # RDM_mahalanobis[t, i, j] = mahalanobis_dist(images[
-                        # i][:, t], images[j][:, t],data_cov)
-                        # RDM_mahalanobis[t, j, i] = RDM_mahalanobis[t, i, j]
+                        RDM_mahalanobis[t, i, j] = mahalanobis_dist(images[
+                                                                        i][:,
+                                                                    t],
+                                                                    images[j][:,
+                                                                    t],
+                                                                    data_cov)
+                        RDM_mahalanobis[t, j, i] = RDM_mahalanobis[t, i, j]
 
             return RDM_euclidean, RDM_corr, RDM_mahalanobis
 
         RDM_euclidean, RDM_corr, RDM_mahalanobis = finalRDM(images)
         np.save('./Subjects/Subject' + str(
             subj) + '/Magnet_Normalized_RDM_Euclidean_Final', RDM_euclidean)
-        # np.save('./Subjects/Subject15/RDM_Correlation_Final', RDM_corr)
-        # np.save('./Subjects/Subject15/RDM_Mahalanobis_Final', RDM_mahalanobis)
+        np.save('./Subjects/Subject15/RDM_Correlation_Final', RDM_corr)
+        np.save('./Subjects/Subject15/RDM_Mahalanobis_Final', RDM_mahalanobis)
+
+
+
+def create_SVM_RDMs():
+    for subj in range(1, 16):
+        print("Subject " + str(subj))
+        data = hdf5storage.loadmat('./Raw_MEG/Subject_' + str(subj) + '.mat')
+        images = data['Data'][0]
+        images = normalize_magnet(images, subj)
+        num_cores = 4
+        RDM_svm = np.zeros([1201, 156, 156], dtype=np.float64)
+        for t in range(1201):
+            print("Time point: ", t)
+            for i in range(images.shape[0]):
+                for j in range(i + 1, images.shape[0]):
+                    RDM_svm[t, i, j] = avg_svm_dist(images, t, i, j, num_cores)
+                    RDM_svm[t, j, i] = RDM_svm[t, i, j]
+        np.save('./Subjects/Subject' + str(subj) + '/RDM_SVM_Final', RDM_svm)
+
+def svm_dist(images, time, img1, img2, final_svm):
+    y_train = []
+    y_test = []
+    ###################Randomly permute trials####################
+    image1_trials = np.random.permutation(
+        images[img1].reshape(-1, 1))
+    image2_trials = np.random.permutation(
+        images[img2].reshape(-1, 1))
+    bins1 = np.array_split(image1_trials, 6)
+    bins2 = np.array_split(image2_trials, 6)
+    ###################Average each bin####################
+    for idx in range(6):
+        bins1[idx] = np.mean(bins1[idx], axis=0)
+        bins2[idx] = np.mean(bins2[idx], axis=0)
+
+    #########Train svm using 5 bins leave one for test#########
+    bins1_train = []
+    bins2_train = []
+    for i in range(5):
+        bins1_train.append(bins1[i][0][:, time])
+        y_train.append(0)
+        bins2_train.append(bins2[i][0][:, time])
+        y_train.append(1)
+    x_train = np.concatenate((bins1_train, bins2_train))
+    #print("x_train shape: ", x_train.shape)
+    #print("y_train shape: ", len(y_train))
+
+    x_test = np.concatenate(([bins1[5][0][:, time]], [bins2[5][0][:, time]]))
+    y_test.append(0)
+    y_test.append(1)
+    #print("x_test shape: ", x_test.shape)
+    #print("y_test shape: ", len(y_test))
+    clf = svm.SVC()
+    model = clf.fit(x_train, y_train)
+    final_svm.append(model.score(x_test, y_test))
+
+def avg_svm_dist(dataset, time, img1, img2, num_cores):
+    jobs = []
+    manager = mp.Manager()
+    final_svm = manager.list()
+    for iter in range(50):
+        if num_cores > 1:
+            p = Process(target=svm_dist, args=(dataset, time, img1, img2, final_svm))
+            p.start()
+            jobs.append(p)
+        if(len(jobs) == num_cores):
+            for job in jobs:
+                job.join()
+            jobs = []
+
+    if len(jobs) != 0:
+        for job in jobs:
+            job.join()
+    print("len final svm: ", len(final_svm))
+    return np.mean(final_svm)
+
+
+if __name__ == '__main__':
+    # create_MEG_RDMs()
+    create_SVM_RDMs()
