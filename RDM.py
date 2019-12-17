@@ -4,6 +4,8 @@ from sklearn import svm
 
 import multiprocessing as mp
 from multiprocessing import Process
+from os import walk
+import time
 
 
 def cov1para(x, shrink):
@@ -147,77 +149,120 @@ def create_MEG_RDMs():
         np.save('./Subjects/Subject15/RDM_Mahalanobis_Final', RDM_mahalanobis)
 
 
-
 def create_SVM_RDMs():
+    ####### works with MEG data on sharcnet##############
     for subj in range(1, 16):
         print("Subject " + str(subj))
-        data = hdf5storage.loadmat('./Raw_MEG/Subject_' + str(subj) + '.mat')
-        images = data['Data'][0]
-        images = normalize_magnet(images, subj)
-        num_cores = 4
-        RDM_svm = np.zeros([1201, 156, 156], dtype=np.float64)
-        for t in range(1201):
-            print("Time point: ", t)
-            for i in range(images.shape[0]):
-                for j in range(i + 1, images.shape[0]):
-                    RDM_svm[t, i, j] = avg_svm_dist(images, t, i, j, num_cores)
-                    RDM_svm[t, j, i] = RDM_svm[t, i, j]
-        np.save('./Subjects/Subject' + str(subj) + '/RDM_SVM_Final', RDM_svm)
+        sub = "0" + str(subj) if subj < 10 else str(subj)
+        subject_folder = '/home/nbayat5/projects/def-yalda/Memorability_Data' \
+                         '/MEG/PercepFluFus_' + sub
 
-def svm_dist(images, time, img1, img2, final_svm):
+        num_cores = 16
+        #RDM_svm = np.zeros([1201, 156, 156], dtype=np.float64)
+        jobs = []
+        manager = mp.Manager()
+        RDM_svm = manager.list()
+        for t in range(1201):
+            if num_cores > 1:
+                p = Process(target=svm_RDM_per_time,
+                            args=(subject_folder, RDM_svm, t,num_cores))
+                p.start()
+                jobs.append(p)
+                if (len(jobs) == num_cores):
+                    for job in jobs:
+                        job.join()
+                    jobs = []
+            else:
+                svm_RDM_per_time(subject_folder, RDM_svm, t,num_cores)
+
+        if len(jobs) != 0:
+            for job in jobs:
+                job.join()
+
+        np.array(RDM_svm).reshape((1201, 156, 156))
+        np.save('./RDM_SVM_'+str(subj), RDM_svm)
+
+
+def svm_RDM_per_time(subject_folder, RDM_svm, t, num_cores):
+    result= np.zeros([156, 156], dtype=np.float64)
+    for i in range(156):
+        for j in range(i + 1, 156):
+            img_i_dir = subject_folder + "/" + str(i + 1) + "/"
+            img_j_dir = subject_folder + "/" + str(j + 1) + "/"
+            result[i, j] = avg_svm_dist(t, img_i_dir, img_j_dir, num_cores)
+
+    RDM_svm.append(result)
+
+def svm_dist(time, img1_dir, img2_dir, final_svm):
     y_train = []
     y_test = []
+    trials1 = []
+    trials2 = []
+    ############################Load trials#############################
+    for (dirpath, dirnames, filenames) in walk(img1_dir):
+        for filename in filenames:
+            if "low" in filename:
+                trials1.append(hdf5storage.loadmat(img1_dir + filename))
+    for (dirpath, dirnames, filenames) in walk(img2_dir):
+        for filename in filenames:
+            if "low" in filename:
+                trials2.append(hdf5storage.loadmat(img2_dir + filename))
     ###################Randomly permute trials####################
     image1_trials = np.random.permutation(
-        images[img1].reshape(-1, 1))
+        np.array(trials1).reshape(-1, 1))
     image2_trials = np.random.permutation(
-        images[img2].reshape(-1, 1))
+        np.array(trials2).reshape(-1, 1))
     bins1 = np.array_split(image1_trials, 6)
     bins2 = np.array_split(image2_trials, 6)
     ###################Average each bin####################
     for idx in range(6):
-        bins1[idx] = np.mean(bins1[idx], axis=0)
-        bins2[idx] = np.mean(bins2[idx], axis=0)
+        bins1[idx] = np.sum(
+            [bins1[idx][k][0]['F'] for k in range(bins1[idx].shape[0])], axis=0) / \
+                     bins1[idx].shape[0]
+        bins2[idx] = np.sum(
+            [bins2[idx][k][0]['F'] for k in range(bins2[idx].shape[0])], axis=0) / \
+                     bins2[idx].shape[0]
 
     #########Train svm using 5 bins leave one for test#########
     bins1_train = []
     bins2_train = []
     for i in range(5):
-        bins1_train.append(bins1[i][0][:, time])
+        baseline_std = np.std(np.asarray(bins1[i][:306, :200]))
+        bins1_train.append(bins1[i][:306, time]/baseline_std)
         y_train.append(0)
-        bins2_train.append(bins2[i][0][:, time])
+        baseline_std = np.std(np.asarray(bins2[i][:306, :200]))
+        bins2_train.append(bins2[i][:306, time]/baseline_std)
         y_train.append(1)
     x_train = np.concatenate((bins1_train, bins2_train))
-    #print("x_train shape: ", x_train.shape)
-    #print("y_train shape: ", len(y_train))
 
-    x_test = np.concatenate(([bins1[5][0][:, time]], [bins2[5][0][:, time]]))
+    x_test = np.concatenate(([bins1[5][:306, time]], [bins2[5][:306, time]]))
     y_test.append(0)
     y_test.append(1)
-    #print("x_test shape: ", x_test.shape)
-    #print("y_test shape: ", len(y_test))
-    clf = svm.SVC()
+    clf = svm.SVC(gamma='auto')
     model = clf.fit(x_train, y_train)
     final_svm.append(model.score(x_test, y_test))
 
-def avg_svm_dist(dataset, time, img1, img2, num_cores):
+
+def avg_svm_dist(time, img1_dir, img2_dir, num_cores):
     jobs = []
     manager = mp.Manager()
     final_svm = manager.list()
     for iter in range(50):
         if num_cores > 1:
-            p = Process(target=svm_dist, args=(dataset, time, img1, img2, final_svm))
+            p = Process(target=svm_dist,
+                        args=(time, img1_dir, img2_dir, final_svm))
             p.start()
             jobs.append(p)
-        if(len(jobs) == num_cores):
-            for job in jobs:
-                job.join()
-            jobs = []
+            if (len(jobs) == num_cores):
+                for job in jobs:
+                    job.join()
+                jobs = []
+        else:
+            svm_dist(time, img1_dir, img2_dir, final_svm)
 
     if len(jobs) != 0:
         for job in jobs:
             job.join()
-    print("len final svm: ", len(final_svm))
     return np.mean(final_svm)
 
 
