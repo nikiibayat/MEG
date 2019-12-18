@@ -221,12 +221,12 @@ def fusion_twinsets():
 
         try:
             RDM_corr_MEG = np.load(
-                './Subjects/' + subject + '/RDM_Correlation_Final.npy')
+                './Subjects/' + subject + '/Magnet_Normalized_RDM_Correlation_Final.npy')
             RDM_euclidean_MEG = np.load(
                 './Subjects/' + subject +
                 '/Magnet_Normalized_RDM_Euclidean_Final.npy')
             RDM_mahalanobis_MEG = np.load(
-                './Subjects/' + subject + '/RDM_Mahalanobis_Final.npy')
+                './Subjects/' + subject + '/Magnet_Normalized_RDM_Mahalanobis_Final.npy')
         except:
             print("Error in loading MEG RDMs")
 

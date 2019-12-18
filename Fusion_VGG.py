@@ -12,13 +12,18 @@ def load_brain_RDMs(subj):
     return MEG, fMRI0, fMRI1
 
 def transform_RDM(vgg_RDM):
-    RDM = np.zeros((156, 156), dtype=np.float64)
-    RDM[0: 28, 0: 28] = vgg_RDM[0: 28, 0: 28] #Objects
-    RDM[28: 64, 28: 64] = vgg_RDM[60: 96, 60: 96] #Objects
-    RDM[64: 100, 64: 100] = vgg_RDM[96: 132, 96: 132]  #Scenes
-    RDM[100: 124, 100: 124] = vgg_RDM[132: 156, 132: 156]  #People
-    RDM[124: 156, 124: 156] = vgg_RDM[28: 60, 28: 60]  #Faces
-    return RDM
+    animals = np.arange(0, 28)
+    faces = np.arange(28, 60)
+    objects = np.arange(60, 96)
+    scenes = np.arange(96, 132)
+    people = np.arange(132, 156)
+    arrays = [animals, objects, scenes, people, faces]
+    reindex = np.array([])
+    for array in arrays:
+        reindex = np.concatenate([reindex, array])
+    result = [vgg_RDM['RDM'][int(i), int(j)] for i in reindex for j in reindex]
+    return np.array(result).reshape(156, 156)
+
 
 def load_vgg_RDMs():
     vgg_RDMs = {}
@@ -72,26 +77,26 @@ if __name__ == '__main__':
             corr = []
             if (key + '_fMRI0') not in vgg_fusion.keys():
                 vgg_fusion[key + '_fMRI0'] = [
-                    spearmanr(squareform(fMRI0), squareform(vgg_RDMs[key]['RDM']))]
+                    spearmanr(squareform(fMRI0), squareform(vgg_RDMs[key]))[0]]
+                print(key," - ", vgg_fusion[key + '_fMRI0'])
                 vgg_fusion[key + '_fMRI1'] = [
-                    spearmanr(squareform(fMRI1), squareform(vgg_RDMs[key]['RDM']))]
+                    spearmanr(squareform(fMRI1), squareform(vgg_RDMs[key]))[0]]
                 vgg_fusion[key + '_MEG'] = []
             else:
                 vgg_fusion[key + '_fMRI0'].append(
-                    spearmanr(squareform(fMRI0), squareform(vgg_RDMs[key]['RDM'])))
+                    spearmanr(squareform(fMRI0), squareform(vgg_RDMs[key]))[0])
+                print(key," - ", vgg_fusion[key + '_fMRI0'])
                 vgg_fusion[key + '_fMRI1'].append(
-                    spearmanr(squareform(fMRI1), squareform(vgg_RDMs[key]['RDM'])))
+                    spearmanr(squareform(fMRI1), squareform(vgg_RDMs[key]))[0])
             for t in range(1201):
-                corr.append(spearmanr(squareform(MEG[t]),squareform(vgg_RDMs[key]['RDM'])))
+                corr.append(spearmanr(squareform(MEG[t]), squareform(vgg_RDMs[key]))[0])
             vgg_fusion[key + '_MEG'].append(corr)
-
     for key in vgg_fusion.keys():
-        vgg_fusion[key] = np.mean(vgg_fusion[key])
         if 'MEG' not in key:
-            print(key,"- Avg Correlation: ",vgg_fusion[key])
-
-    # avg_meg = np.load('./Subjects/MEG_Corr_avg_oversubjects.npy')
-    # avg_fMRI0 = np.load('./fMRI_RDMs/rdm_cor_no_nn/corr_loc0_avg.npy')
-    # avg_fMRI0 = np.load('./fMRI_RDMs/rdm_cor_no_nn/corr_loc1_avg.npy')
+            print(vgg_fusion[key])
+            vgg_fusion[key] = np.mean(vgg_fusion[key])
+            print(key, " - Avg corr fMRI: ", vgg_fusion[key])
+        else:
+            vgg_fusion[key] = np.mean(vgg_fusion[key], axis=0)
 
     plot_MEG_corr(vgg_fusion)
