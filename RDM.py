@@ -150,8 +150,8 @@ def create_MEG_RDMs():
         RDM_euclidean, RDM_corr, RDM_mahalanobis = finalRDM(images)
         # np.save('./Subjects/Subject' + str(
         #     subj) + '/Magnet_Normalized_RDM_Euclidean_Final', RDM_euclidean)
-        np.save('./Subjects/Subject15/Magnet_Normalized_RDM_Correlation_Final', RDM_corr)
-        np.save('./Subjects/Subject15/Magnet_Normalized_RDM_Mahalanobis_Final', RDM_mahalanobis)
+        np.save('./Subjects/Subject'+ str(subj) +'/Magnet_Normalized_RDM_Correlation_Final', RDM_corr)
+        np.save('./Subjects/Subject'+ str(subj) +'/Magnet_Normalized_RDM_Mahalanobis_Final', RDM_mahalanobis)
 
 
 def create_SVM_RDMs():
