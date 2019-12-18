@@ -78,14 +78,12 @@ if __name__ == '__main__':
             if (key + '_fMRI0') not in vgg_fusion.keys():
                 vgg_fusion[key + '_fMRI0'] = [
                     spearmanr(squareform(fMRI0), squareform(vgg_RDMs[key]))[0]]
-                print(key," - ", vgg_fusion[key + '_fMRI0'])
                 vgg_fusion[key + '_fMRI1'] = [
                     spearmanr(squareform(fMRI1), squareform(vgg_RDMs[key]))[0]]
                 vgg_fusion[key + '_MEG'] = []
             else:
                 vgg_fusion[key + '_fMRI0'].append(
                     spearmanr(squareform(fMRI0), squareform(vgg_RDMs[key]))[0])
-                print(key," - ", vgg_fusion[key + '_fMRI0'])
                 vgg_fusion[key + '_fMRI1'].append(
                     spearmanr(squareform(fMRI1), squareform(vgg_RDMs[key]))[0])
             for t in range(1201):

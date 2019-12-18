@@ -116,7 +116,7 @@ def normalize_magnet(images, subject):
 
 
 def create_MEG_RDMs():
-    for subj in range(1, 16):
+    for subj in range(5, 16):
         print("Subject " + str(subj))
         data = hdf5storage.loadmat('./Raw_MEG/Subject_' + str(subj) + '.mat')
         images = data['Data'][0]
