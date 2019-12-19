@@ -52,7 +52,7 @@ def correlation(img1, img2):
 
 
 def plot_corr(c1, c2, c3, subject):
-    time = np.arange(1201)
+    time = np.arange(-200, 1001)
     plt.title(subject)
     plt.plot(time, c1, marker='o', markerfacecolor='blue', markersize=2,
              color='skyblue', linewidth=2, label="1-Correlation")
@@ -61,6 +61,7 @@ def plot_corr(c1, c2, c3, subject):
              label="Mahalanobis")
     plt.legend()
     plt.savefig("MeasureCorr" + subject)
+    plt.close()
 
 
 if __name__ == '__main__':
