@@ -56,15 +56,15 @@ def compute_cov(images):
 
 
 def correlation(img1, img2):
-    img1 = img1[1: len(img1): 3]
-    img2 = img2[1: len(img2): 3]
+    # img1 = img1[1: len(img1): 3]
+    # img2 = img2[1: len(img2): 3]
     return 1 - np.corrcoef(img1, img2)[0, 1]
 
 
 def euclidean(img1, img2):
     # only using the magnetometer sensors
-    img1 = img1[1: len(img1): 3]
-    img2 = img2[1: len(img2): 3]
+    # img1 = img1[1: len(img1): 3]
+    # img2 = img2[1: len(img2): 3]
     distance = np.linalg.norm(img1 - img2)
     return distance
 
@@ -104,7 +104,7 @@ def normalize_magnet(images, subject):
                 continue
 
             trial = condition[tri][0]
-            for sens in range(1, len(trial), 3):
+            for sens in range(1, len(trial)):
                 sensor = trial[sens]
                 baseline = []
                 for t in range(200):
@@ -116,11 +116,11 @@ def normalize_magnet(images, subject):
 
 
 def create_MEG_RDMs():
-    for subj in range(5, 16):
+    for subj in range(1, 16):
         print("Subject " + str(subj))
         data = hdf5storage.loadmat('./Raw_MEG/Subject_' + str(subj) + '.mat')
         images = data['Data'][0]
-        data_cov = compute_cov(images)
+        # data_cov = compute_cov(images)
         images = normalize_magnet(images, subj)
 
         for trial in range(len(images)):
@@ -138,20 +138,22 @@ def create_MEG_RDMs():
                         RDM_corr[t, i, j] = correlation(images[i][:, t],
                                                         images[j][:, t])
                         RDM_corr[t, j, i] = RDM_corr[t, i, j]
-                        # RDM_euclidean[t, i, j] = euclidean(images[i][:, t],
-                        #                                    images[j][:, t])
-                        # RDM_euclidean[t, j, i] = RDM_euclidean[t, i, j]
-                        RDM_mahalanobis[t, i, j] = mahalanobis_dist(
-                            images[i][:, t], images[j][:, t], data_cov)
-                        RDM_mahalanobis[t, j, i] = RDM_mahalanobis[t, i, j]
+                        RDM_euclidean[t, i, j] = euclidean(images[i][:, t],
+                                                           images[j][:, t])
+                        RDM_euclidean[t, j, i] = RDM_euclidean[t, i, j]
+                        # RDM_mahalanobis[t, i, j] = mahalanobis_dist(
+                        #     images[i][:, t], images[j][:, t], data_cov)
+                        # RDM_mahalanobis[t, j, i] = RDM_mahalanobis[t, i, j]
 
             return RDM_euclidean, RDM_corr, RDM_mahalanobis
 
         RDM_euclidean, RDM_corr, RDM_mahalanobis = finalRDM(images)
-        # np.save('./Subjects/Subject' + str(
-        #     subj) + '/Magnet_Normalized_RDM_Euclidean_Final', RDM_euclidean)
-        np.save('./Subjects/Subject'+ str(subj) +'/Magnet_Normalized_RDM_Correlation_Final', RDM_corr)
-        np.save('./Subjects/Subject'+ str(subj) +'/Magnet_Normalized_RDM_Mahalanobis_Final', RDM_mahalanobis)
+        np.save('./Subjects/Subject' + str(
+            subj) + '/Normalized_RDM_Euclidean_Final', RDM_euclidean)
+        np.save('./Subjects/Subject' + str(
+            subj) + '/Normalized_RDM_Correlation_Final', RDM_corr)
+        # np.save('./Subjects/Subject'+ str(subj)
+        # +'/Magnet_Normalized_RDM_Mahalanobis_Final', RDM_mahalanobis)
 
 
 def create_SVM_RDMs():

@@ -94,45 +94,46 @@ def compute_avg_fMRI():
 
 
 def compute_avg_MEG():
-
-    # MEG_RDM_corr_avg = []
-    # MEG_RDM_mah_avg = []
+    MEG_RDM_corr_avg = []
+    MEG_RDM_mah_avg = []
     MEG_RDM_Normalized_Euc_avg = []
 
     for i in range(1, 16):
         subject = "Subject" + str(i)
-        # RDM_corr_MEG = np.load(
-        #         './Subjects/' + subject + '/RDM_Correlation_Final.npy')
-        # MEG_RDM_corr_avg.append(RDM_corr_MEG)
-        # RDM_mahalanobis_MEG = np.load(
-        #         './Subjects/' + subject + '/RDM_Mahalanobis_Final.npy')
-        # MEG_RDM_mah_avg.append(RDM_mahalanobis_MEG)
+        RDM_corr_MEG = np.load(
+                './Subjects/' + subject + '/RDM_Correlation_Final.npy')
+        MEG_RDM_corr_avg.append(RDM_corr_MEG)
+        RDM_mahalanobis_MEG = np.load(
+                './Subjects/' + subject + '/RDM_Mahalanobis_Final.npy')
+        MEG_RDM_mah_avg.append(RDM_mahalanobis_MEG)
         MEG_RDM_Normalized_Euc = np.load(
             './Subjects/' + subject + '/Magnet_Normalized_RDM_Euclidean_Final.npy')
         MEG_RDM_Normalized_Euc_avg.append(MEG_RDM_Normalized_Euc)
 
-    # MEG_RDM_corr_avg = np.asarray(MEG_RDM_corr_avg)
-    # MEG_RDM_corr_avg = np.mean(MEG_RDM_corr_avg, axis=0)
-    # MEG_RDM_mah_avg = np.asarray(MEG_RDM_mah_avg)
-    # MEG_RDM_mah_avg = np.mean(MEG_RDM_mah_avg,axis=0)
+    MEG_RDM_corr_avg = np.asarray(MEG_RDM_corr_avg)
+    MEG_RDM_corr_avg = np.mean(MEG_RDM_corr_avg, axis=0)
+    MEG_RDM_mah_avg = np.asarray(MEG_RDM_mah_avg)
+    MEG_RDM_mah_avg = np.mean(MEG_RDM_mah_avg,axis=0)
     MEG_RDM_Normalized_Euc_avg = np.asarray(MEG_RDM_Normalized_Euc_avg)
     MEG_RDM_Normalized_Euc_avg = np.mean(MEG_RDM_Normalized_Euc_avg, axis=0)
 
     np.save('./Subjects/Magnet_MEG_Euc_avg_oversubjects', MEG_RDM_Normalized_Euc_avg)
-    # np.save('./Subjects/MEG_Corr_avg_oversubjects',np.mean(MEG_RDM_corr_avg, axis=0))
-    # np.save('./Subjects/MEG_Mah_avg_oversubjects',np.mean(MEG_RDM_mah_avg, axis=0))
+    np.save('./Subjects/MEG_Corr_avg_oversubjects',np.mean(MEG_RDM_corr_avg, axis=0))
+    np.save('./Subjects/MEG_Mah_avg_oversubjects',np.mean(MEG_RDM_mah_avg, axis=0))
 
     for i in range(0, 1201, 50):
-        # plot_mds(MEG_RDM_corr_avg[i, :, :], "1-Correlation "+str(i-200),"corr")
-        # plot_mds(MEG_RDM_mah_avg[i, :, :], "Mahalanobis "+str(i-200),"mah")
+        plot_mds(MEG_RDM_corr_avg[i, :, :], "1-Correlation "+str(i-200),"corr")
+        plot_mds(MEG_RDM_mah_avg[i, :, :], "Mahalanobis "+str(i-200),"mah")
         plot_mds(MEG_RDM_Normalized_Euc_avg[i, :, :],
                  "Normalized Euclidean " + str(i - 200), "euc")
-        # plot_RDM(MEG_RDM_corr_avg[i, :, :], "1-Correlation "+str(i-200),"corr")
+        plot_RDM(MEG_RDM_corr_avg[i, :, :], "1-Correlation "+str(i-200),"corr")
         plot_RDM(MEG_RDM_Normalized_Euc_avg[i, :, :],
                  "Normalized Euclidean " + str(i - 200), "euc")
-        # plot_RDM(MEG_RDM_mah_avg[i, :, :], "Mahalanobis "+str(i-200),"mah")
+        plot_RDM(MEG_RDM_mah_avg[i, :, :], "Mahalanobis "+str(i-200),"mah")
 
 
 if __name__ == '__main__':
     # compute_avg_fMRI()
+
+    # plots MEG RDMs every 50ms with mds
     compute_avg_MEG()
